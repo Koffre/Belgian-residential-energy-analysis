@@ -101,3 +101,4 @@ p2 <- ggplot(data_clean, aes(x = income_euro, y = sq_meters)) +
 ggsave("plots/sqmeters_vs_income.png", plot = p2, width = 7, height = 5)
 
 cat("\n✅ EDA script completed. Plots generated in 'plots/' directory.\n")
+

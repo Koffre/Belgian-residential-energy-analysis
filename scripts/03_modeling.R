@@ -103,3 +103,4 @@ pct_diff_Q2 <- round((exp(est_Q2) - 1) * 100, 2)
 cat("\nQ2 Percentage Difference (EPC Label A vs B-F Avg):", pct_diff_Q2, "%\n")
 
 cat("\n✅ Modeling script executed successfully. Diagnostic plots saved in 'plots/'.\n")
+

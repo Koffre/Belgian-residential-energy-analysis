@@ -1,0 +1,402 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- Packages ---
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage[table]{xcolor}
+\usepackage{eurosym}
+\usepackage{hyperref}
+
+% --- Setup Captions & Formatting ---
+\captionsetup[table]{skip=3pt, font=small}
+\captionsetup[figure]{skip=3pt, font=small}
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+\setlength{\abovecaptionskip}{3pt}
+
+% Define graphics path (Adjust folder as needed)
+\graphicspath{{./figures/}{./plots/}{./}}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\begin{document}
+
+% --- TITLE PAGE ---
+\begin{titlepage}
+    \centering
+    
+    % University Logo (Include logo image file in the same directory or assets/ folder)
+    \IfFileExists{uhasselt-standaard.png}{
+        \includegraphics[width=0.35\textwidth]{uhasselt-standaard.png}\par
+        \vspace{1cm}
+    }{
+        \vspace{1cm}
+    }
+    
+    {\LARGE \textbf{Hasselt University}\par}
+    \vspace{0.5cm}
+    
+    {\LARGE \textbf{Project Learning from Data}\par}
+    \vspace{1.5cm}
+    
+    {\huge \textbf{Determinants of Residential Energy Consumption in Belgium}\par}
+    \vspace{0.5cm}
+    
+    {\LARGE Group 1\par}
+    \vspace{1.5cm}
+    
+    \Large Alejandrina Jimenez Guzman\\
+    \Large Joffre Sanchez Ceron\\
+    \Large Mohammed Tahri\\
+    \Large Sulaiman Mirzai\\
+    \Large Wanna Tafal Husna\\
+    \Large Zunaira Zafar
+    
+    \vfill
+
+    {\normalsize \textbf{Group-specific rows removed from raw dataset: 1, 11, 40}}
+    
+\end{titlepage}
+
+\newpage
+
+% --- SECTION 1: INTRODUCTION ---
+\section{Introduction}\label{sec:introduction}
+
+This report assesses the determinants of annual residential electricity consumption in Belgium using a cross-sectional sample of 2,500 households. Four research questions guide the analysis: (Q1) identifying the best predictive model; (Q2) quantifying the consumption difference between EPC label A and labels B--F; (Q3) assessing the direct effect of household income on consumption; and (Q4) testing whether the effect of the EPC label varies with household occupancy. 
+
+Variables \texttt{roof\_color} and \texttt{pet\_ownership} were excluded \textit{a priori} as they represent neither functional nor socio-economic drivers of energy demand (Vasseur \& Kemp, 2015). This is confirmed by bivariate screenings, where consumption remains consistent across all categories.
+
+% --- SECTION 2: DATA & PREPROCESSING ---
+\section{Data and Preprocessing}\label{sec:data}
+
+After removing group-specific rows (rows 1, 11, 40) and \textit{a priori} excluded variables, \texttt{epc\_label} (levels A--F; reference: A) and \texttt{building\_era} (Pre-1970, 1970--2000, Post-2000) were converted to factors. Fifteen incomplete rows ($<1\%$) were removed via listwise deletion, yielding $n = 2{,}482$.
+
+\textbf{Outlier analysis.} A $3.0 \times \text{IQR}$ upper fence identified seven extreme values of \texttt{annual\_kwh} (Tukey, 1977). Five showed consumption in the millions of kWh --- physically impossible for residential households of their reported size, occupancy, and EPC class (Table~\ref{tab:outliers}) --- and were removed as confirmed data entry errors. Two high values (16,395 and 17,197 kWh) were retained as internally consistent: large homes ($268\text{--}304\,\text{m}^2$), seven occupants, Pre-1970, EPC E/F. The final analytical dataset contains \textbf{2,477 observations}.
+
+\begin{longtable}{lrrrrl}
+\caption{Extreme observations identified by $3.0 \times \text{IQR}$ rule.}\label{tab:outliers}\\
+\toprule
+\textbf{ID} & \textbf{annual\_kwh} & \textbf{$\text{m}^2$} & \textbf{Occupancy} & \textbf{EPC} & \textbf{Decision} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{annual\_kwh} & \textbf{$\text{m}^2$} & \textbf{Occupancy} & \textbf{EPC} & \textbf{Decision} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+Obs. A & 2,900,000 & 112 & 2 & A & Removed \\
+Obs. B & 3,400,000 & 100 & 1 & B & Removed \\
+Obs. C & 4,100,000 & 156 & 4 & C & Removed \\
+Obs. D & 5,400,000 & 130 & 3 & D & Removed \\
+Obs. E & 2,100,000 & 142 & 2 & E & Removed \\
+Obs. F & 16,395    & 304 & 7 & E & Retained \\
+Obs. G & 17,197    & 268 & 7 & F & Retained \\
+\end{longtable}
+
+\textbf{Variable exclusions.} A chi-square test between \texttt{epc\_label} and \texttt{building\_era} yielded $p \approx 0$, with zero category overlap in the contingency table: perfect collinearity. \texttt{epc\_label} was retained as it appears directly in Q2 and Q4. \texttt{dist\_to\_brussels} was excluded due to zero Pearson correlation with \texttt{annual\_kwh} ($r = 0.00$).
+
+\subsection{Descriptive Statistics}\label{subsec:descriptive}
+The average annual energy consumption in the analytical sample ($n = 2{,}477$) is 5,873.90~kWh ($\text{SD} = 2{,}224.00$), while living space averages $158.30\,\text{m}^2$. Occupancy centers at 3.99 residents, and mean household income is €48,861.00 (ranging from €8,488.0 to €206,368.0).
+
+\subsection{Key Correlations}\label{subsec:correlations}
+There is a strong correlation between \texttt{income\_euro} and \texttt{sq\_meters} ($r = 0.72$), which explains why income is absorbed by living area in the multivariable model.
+
+\begin{table}[H]
+\centering
+\caption{Pearson correlation matrix.}\label{tab:correlation_matrix}
+\begin{tabular}{lrrrrr}
+\toprule
+& \textbf{kwh} & \textbf{sq\_m} & \textbf{occup.} & \textbf{income} & \textbf{dist} \\
+\midrule
+\texttt{annual\_kwh}    & 1.00 & 0.38 & 0.76  & 0.29 & 0.00 \\
+\texttt{sq\_meters}     & 0.38 & 1.00 & -0.02 & 0.72 & 0.02 \\
+\texttt{occupancy}      & 0.76 & -0.02 & 1.00 & 0.00 & 0.02 \\
+\texttt{income\_euro}   & 0.29 & 0.72 & 0.00  & 1.00 & -0.01 \\
+\texttt{dist\_brussels} & 0.00 & 0.02 & 0.02  & -0.01 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% --- SECTION 3: STATISTICAL METHODS ---
+\section{Statistical Methods}\label{sec:methods}
+
+Forward variable selection was applied to the modeling dataset in the order specified in the Statistical Analysis Plan (SAP): $\texttt{sq\_meters} \to \texttt{epc\_label} \to \texttt{occupancy\_count} \to \texttt{income\_euro} \to \texttt{epc\_label:occupancy\_count}$. A term was retained only if it was statistically significant ($p < 0.05$) \textbf{and} reduced the model AIC. After each step, residual diagnostics (residuals vs. fitted plots, Q-Q plots, Kolmogorov-Smirnov test, and GVIF) were performed. Where heteroscedasticity was detected, a log transformation of the outcome was applied and selection repeated (James et al., 2021).
+
+To control the familywise error rate (FWER) across planned hypothesis tests (Q2, Q3, Q4) at $\alpha = 0.05$, the **Holm-Bonferroni stepwise procedure** was applied (Holm, 1979).
+
+% --- SECTION 4: RESULTS ---
+\section{Results}\label{sec:results}
+
+\subsection{Model Selection and Diagnostics}\label{subsec:selection}
+
+Forward selection on the original scale produced pronounced heteroscedasticity. A log transformation of \texttt{annual\_kwh} resolved both heteroscedasticity and residual non-normality ($p = 0.94$ on KS test).
+
+\begin{table}[H]
+\centering
+\caption{Forward selection steps on $\log(\text{annual\_kwh})$. $\star$ = selected final model.}\label{tab:selection}
+\begin{tabular}{lrrrrl}
+\toprule
+\textbf{Model} & \textbf{AIC} & \textbf{$R^2$} & \textbf{Adj. $R^2$} & \textbf{RMSE} & \textbf{Decision} \\
+\midrule
+M1: \texttt{sq\_meters} & 1749.4 & 0.142 & 0.142 & 0.3440 & enters \\
+M2: + \texttt{epc\_label} & 1435.2 & 0.247 & 0.246 & 0.3222 & enters \\
+M3: + \texttt{occupancy\_count} $\mathbf{\star}$ & -3349.3 & 0.891 & 0.891 & 0.1226 & \textbf{enters} \\
+M4: + \texttt{income\_euro} & -3347.7 & 0.891 & 0.891 & 0.1226 & excluded ($p = 0.534$) \\
+M5: + \texttt{epc\_label:occupancy} & -3344.7 & 0.891 & 0.891 & 0.1225 & excluded (all $p > 0.05$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The final model is:
+$$\log(\widehat{\text{annual\_kwh}}) = \beta_0 + \beta_1 \cdot \text{sq\_meters} + \sum_{k \in \{B,\ldots,F\}} \beta_k \cdot \mathbf{1}[\text{epc}=k] + \beta_7 \cdot \text{occupancy\_count}$$
+
+with $R^2 = 0.891$, Adj. $R^2 = 0.891$, $\text{AIC} = -3349.3$, and $\text{RMSE} = 0.123$ (log scale). All GVIF values were below 2.4.
+
+\subsection{Model Parameters}\label{subsec:parameters}
+
+\begin{table}[H]
+\centering
+\caption{Final model coefficients on log scale. Reference category: EPC A.}\label{tab:coefficients}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Term} & \textbf{Estimate} & \textbf{SE} & \textbf{95\% CI Low} & \textbf{95\% CI High} & \textbf{$p$-value} \\
+\midrule
+Intercept          & 7.2106 & 0.0130 & 7.1851 & 7.2362 & $<0.001$ \\
+\texttt{sq\_meters}& 0.0040 & 0.0001 & 0.0038 & 0.0041 & $<0.001$ \\
+EPC B              & 0.0869 & 0.0079 & 0.0714 & 0.1023 & $<0.001$ \\
+EPC C              & 0.1583 & 0.0075 & 0.1436 & 0.1730 & $<0.001$ \\
+EPC D              & 0.2414 & 0.0081 & 0.2254 & 0.2574 & $<0.001$ \\
+EPC E              & 0.3249 & 0.0085 & 0.3082 & 0.3415 & $<0.001$ \\
+EPC F              & 0.4025 & 0.0095 & 0.3839 & 0.4212 & $<0.001$ \\
+\texttt{occupancy\_count} & 0.1511 & 0.0013 & 0.1486 & 0.1535 & $<0.001$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All parameters are highly significant ($p < 0.001$). On the original scale: each additional $\text{m}^2$ increases consumption by 0.4\%; each additional resident increases consumption by **16.3\%** (the dominant predictor). Relative to EPC A, consumption increases monotonically up to **+50.0\%** for EPC F.
+
+\subsection{Research Questions}\label{subsec:rqs}
+
+\textbf{Q1: Best predictive model.} Selected on parsimony grounds: $\log(\text{annual\_kwh}) \sim \text{sq\_meters} + \text{epc\_label} + \text{occupancy\_count}$ ($\text{AIC} = -3349.3$).
+
+\textbf{Q2: EPC A vs. average B--F.} EPC A homes consume on average \textbf{21.6\% less} than the mean of B--F homes (ratio = 0.784, 95\% CI: 0.775--0.794; Holm-adjusted $p < 0.001$).
+
+\textbf{Q3: Income effect.} The direct effect of income is negligible and non-significant: per €10,000 increase, ratio = 1.001 (95\% CI: 0.998--1.004; Holm-adjusted $p = 0.534$). Its effect is operating indirectly through living area ($r = 0.72$).
+
+\textbf{Q4: EPC $\times$ occupancy interaction.} All interaction terms were non-significant ($p > 0.05$), confirming the EPC efficiency effect remains consistent regardless of household size.
+
+% --- SECTION 5: ETHICS ---
+\section{Ethical Considerations and Stakeholder Impact}\label{sec:ethics}
+
+This project worked with sensitive household socio-economic indicators. Although anonymized, re-identification risks exist under multi-variable overlap, necessitating strict compliance with GDPR governance.
+
+The results highlight issues in **energy equity**: lower-income households often face barriers to accessing energy-efficient housing. Policy instruments should focus on structural support (e.g., targeted renovation grants) rather than purely behavioral expectations. Furthermore, using such models in commercial algorithmic scoring (e.g., credit/insurance) would unfairly penalize low-income renters.
+
+% --- SECTION 6: CONCLUSION ---
+\section{Conclusion}\label{sec:conclusion}
+
+Residential energy demand in Belgium is driven primarily by occupancy count, structural size, and EPC rating. The optimal log-linear model accounts for 89.1\% of variance while satisfying regression assumptions. EPC A buildings achieve a 21.6\% reduction relative to the B--F average. Household income exhibits no direct explanatory power once living space is controlled.
+
+\newpage
+\pagestyle{empty}
+
+% --- REFERENCES ---
+\section*{References}
+Holm, S. (1979). A simple sequentially rejective multiple test procedure. \textit{Scandinavian Journal of Statistics}, 6(2), 65--70.
+
+James, G., Witten, D., Hastie, T., \& Tibshirani, R. (2021). \textit{An Introduction to Statistical Learning}. Springer.
+
+Tukey, J. W. (1977). \textit{Exploratory Data Analysis}. Addison-Wesley.
+
+Vasseur, V., \& Kemp, R. (2015). The adoption of energy efficiency measures by Dutch households. \textit{Energy Policy}, 77, 68--78.
+
+\vspace{0.8cm}
+\section*{AI Use Transparency Statement}
+Generative AI was used as an auxiliary tool for grammatical review, sentence restructuring, and style consistency. All underlying statistical methodology, code, interpretations, and conclusions were critically reviewed and verified by the authors.
+
+\newpage
+
+\appendix
+\pagestyle{empty}
+\section*{Appendix}
+
+% ── A. Variable Exclusion ─────────────────────────────────────────
+\subsection*{A\quad Variable Exclusion: Bivariate Screening}
+
+The main report excludes \textit{roof\_color} and
+\textit{pet\_ownership} a priori on theoretical grounds.
+The boxplots below provide empirical support: both variables
+show virtually identical distributions of \texttt{annual\_kwh}
+across their categories, confirming no meaningful association
+with the outcome.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.48\linewidth]{roof_color.png}%
+  \hfill%
+  \includegraphics[width=0.48\linewidth]{pet_ownership.png}
+  \caption{Annual electricity consumption by roof color (left)
+  and pet ownership (right). Medians and interquartile ranges
+  are nearly identical across all categories, supporting their
+  a priori exclusion.}
+\end{figure}
+
+% ── B. Building Era Contingency Table ─────────────────────────────
+\subsection*{B\quad \texttt{building\_era} Exclusion: Contingency Table}
+
+The main report states that a chi-square test between
+\texttt{epc\_label} and \texttt{building\_era} revealed perfect
+collinearity ($p \approx 0$, zero category overlap).
+The table below makes this explicit: Post-2000 buildings map
+exclusively to EPC A--B; Pre-1970 and 1970--2000 buildings map
+exclusively to EPC C--F. \texttt{epc\_label} was retained as
+it directly answers Q2 and Q4.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{0.22\linewidth}
+  >{\centering\arraybackslash}p{0.10\linewidth}
+  >{\centering\arraybackslash}p{0.10\linewidth}
+  >{\centering\arraybackslash}p{0.10\linewidth}
+  >{\centering\arraybackslash}p{0.10\linewidth}
+  >{\centering\arraybackslash}p{0.10\linewidth}
+  >{\centering\arraybackslash}p{0.10\linewidth}@{}}
+\caption{Contingency table of \texttt{building\_era} $\times$
+\texttt{epc\_label} ($n = 2{,}477$). Zero cells confirm perfect
+separation. Chi-square: $X^2 = 3311.6$, $df = 10$,
+$p < 2.2 \times 10^{-16}$.}\tabularnewline
+\toprule\noalign{}
+ & A & B & C & D & E & F \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+ & A & B & C & D & E & F \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Pre-1970   &   0 &   0 &  96 & 149 & 336 & 239 \\
+1970--2000 &   0 & 180 & 431 & 237 &   0 &   0 \\
+Post-2000  & 553 & 256 &   0 &   0 &   0 &   0 \\
+\end{longtable}
+
+% ── C. Descriptive Statistics ─────────────────────────────────────
+\subsection*{C\quad Descriptive Statistics}
+
+Table~\ref{tab:desc} summarises the key continuous variables
+in the final analytical dataset ($n = 2{,}477$) after removal
+of group-specific rows, listwise deletion of missing values,
+and exclusion of five confirmed data-entry errors.
+
+\begin{table}[H]
+\centering
+\caption{Descriptive statistics for continuous variables ($n = 2{,}477$).}\label{tab:desc}
+\begin{tabular}{p{0.30\linewidth} r r r r}
+\toprule
+Variable & Mean & SD & Min & Max \\
+\midrule
+annual\_kwh (kWh)    & 5873.90  & 2224.00  & 1824.6 & 17197.1  \\
+sq\_meters (m$^2$)    & 158.30   & 36.50    &  60.3  &  341.3   \\
+occupancy\_count      &   3.99   &   1.98   &   1.0  &   7.0    \\
+income\_euro (\euro) & 48861.00 & 22537.00 & 8488.0 & 206368.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ── D. Full GVIF Table ────────────────────────────────────────────
+\subsection*{D\quad Full GVIF Table}
+
+The main report states all GVIF values were below 2.4.
+The comparison column is $\text{GVIF}^{1/(2 \cdot Df)}$,
+with a cutoff of 2.24 (equivalent to VIF $< 5$).
+
+\begin{table}[H]
+\centering
+\caption{GVIF computed using \texttt{vif()} from the \texttt{car} package.}
+\begin{tabular}{p{0.30\linewidth} c c c l}
+\toprule
+Variable & GVIF & $Df$ & $\text{GVIF}^{1/(2 \cdot Df)}$ & Verdict \\
+\midrule
+\texttt{sq\_meters}        & 1.002 & 1 & 1.001 & $<$ 2.24 \checkmark \\
+\texttt{epc\_label}        & 1.007 & 5 & 1.001 & $<$ 2.24 \checkmark \\
+\texttt{occupancy\_count}  & 1.006 & 1 & 1.003 & $<$ 2.24 \checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ── E. Residuals vs Leverage Plots ────────────────────────────────
+\subsection*{E\quad Residuals vs Leverage Plots}
+
+The Residuals vs Leverage plot checks whether any single
+observation has disproportionate influence on the model
+coefficients via Cook's distance. Points outside the dashed
+contours would require investigation.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.48\linewidth]{leverage_initial.png}%
+  \hfill%
+  \includegraphics[width=0.48\linewidth]{leverage_final.png}
+  \caption{Residuals vs Leverage for original scale (left) and log scale (right).}
+\end{figure}
+
+\newpage
+
+% ── F. Model with EPC × occupancy interaction ──────────────────────────
+
+\subsection*{F\quad  Model with EPC × occupancy interaction}
+
+Model M5 coefficients:  \texttt{log(annual\_kwh) $\sim$ sq\_meters + epc\_label + occupancy\_count + epc\_label:occupancy\_count}. \\
+The five interaction terms (shaded) all have $p > 0.05$, confirming the absence of a significant EPC $\times$ occupancy interaction.
+
+
+\begin{table}[H]
+\centering
+\caption{Model M5 estimated coefficient}.
+
+\label{tab:appendix_m5}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Term} & \textbf{Estimate} & \textbf{SE} & \textbf{$t$-value} & \textbf{$p$-value} \\
+\midrule
+Intercept                        & 7.2190 & 0.0165 & 437.326 & $<0.001$ \\
+\texttt{sq\_meters}              & 0.0040 & 0.0001 &  58.366 & $<0.001$ \\
+EPC B                            & 0.0746 & 0.0179 &   4.175 & $<0.001$ \\
+EPC C                            & 0.1643 & 0.0169 &   9.714 & $<0.001$ \\
+EPC D                            & 0.2124 & 0.0188 &  11.281 & $<0.001$ \\
+EPC E                            & 0.3166 & 0.0196 &  16.160 & $<0.001$ \\
+EPC F                            & 0.3866 & 0.0209 &  18.535 & $<0.001$ \\
+\texttt{occupancy\_count}        & 0.1491 & 0.0027 &  56.092 & $<0.001$ \\
+\midrule
+\rowcolor{gray!15}
+EPC B $\times$ occupancy         & 0.0030 & 0.0040 &   0.758 & 0.449 \\
+\rowcolor{gray!15}
+EPC C $\times$ occupancy         & $-$0.0017 & 0.0038 & $-$0.442 & 0.659 \\
+\rowcolor{gray!15}
+EPC D $\times$ occupancy         & 0.0071 & 0.0041 &   1.709 & 0.088 \\
+\rowcolor{gray!15}
+EPC E $\times$ occupancy         & 0.0020 & 0.0043 &   0.464 & 0.643 \\
+\rowcolor{gray!15}
+EPC F $\times$ occupancy         & 0.0041 & 0.0049 &   0.844 & 0.399 \\
+\bottomrule
+\multicolumn{5}{l}{\small Reference category: EPC A. $n = 2{,}477$. Adj.\ $R^2 = 0.891$.} \\
+\end{tabular}
+\end{table}
+
+
+\end{document}
+
+\end{document}
