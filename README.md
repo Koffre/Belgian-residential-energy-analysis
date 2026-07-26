@@ -47,11 +47,7 @@ This study evaluates key determinants of household energy demand to answer four 
 
 ## 📐 Final Model Formula
 
-log(annual_kwh) = 7.211 + 0.004 * sq_meters + Σ (β_k * I[epc = k]) + 0.151 * occupancy_count
-
-
-$$\log(\text{annual\_kwh}) = 7.211 + 0.004 \cdot \text{sq\_meters} + \sum_{k \in \{B \dots F\}} \beta_k \cdot \mathbb{I}[\text{epc} = k] + 0.151 \cdot \text{occupancy\_count}$$
-
+$$\log(\text{annual\_kwh}) = 7.211 + 0.004 \cdot \text{sq\_meters} + \sum_{k=B}^{F} \beta_k \cdot \mathbb{I}[\text{epc} = k] + 0.151 \cdot \text{occupancy\_count}$$
 ---
 
 ## 🛠️ Stack & Tools
