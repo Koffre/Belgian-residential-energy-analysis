@@ -1,0 +1,24 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Session data files
+.RData
+.RDataTmp
+
+# User-specific files
+.Ruserdata
+
+# Example environment variables
+.Renviron
+
+# RStudio files
+.Rproj.user/
+
+# Knitr and document cache
+/*_cache/
+/*.utf8.md
+/*.knit.md
+
+# Large raw datasets (opcional si la data es muy pesada o privada)
+# data/raw/*.csv
